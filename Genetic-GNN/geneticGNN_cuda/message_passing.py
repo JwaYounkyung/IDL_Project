@@ -13,6 +13,8 @@ __size_error_msg__ = ('All tensors which should get mapped to the same source '
 is_python2 = sys.version_info[0] < 3
 getargspec = inspect.getargspec if is_python2 else inspect.getfullargspec
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print("Device: ", device)
 
 class MessagePassing(torch.nn.Module):
 
@@ -76,7 +78,7 @@ class MessagePassing(torch.nn.Module):
                     if size[idx] != tmp.size(0):
                         raise ValueError(__size_error_msg__)
 
-                    tmp = torch.index_select(tmp, 0, edge_index[idx].cuda())
+                    tmp = torch.index_select(tmp, 0, edge_index[idx].to(device))
                     message_args.append(tmp)
             else:
                 message_args.append(kwargs.get(arg, None))
@@ -97,7 +99,7 @@ class MessagePassing(torch.nn.Module):
 
         out = self.message(*message_args)
         if self.aggr in ["add", "mean", "max"]:
-            out = scatter(out, edge_index[i].cuda(), dim=0, dim_size=size[i], reduce=self.aggr)
+            out = scatter(out, edge_index[i].to(device), dim=0, dim_size=size[i], reduce=self.aggr)
         else:
             pass
         out = self.update(out, *update_args)

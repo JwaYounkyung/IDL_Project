@@ -10,6 +10,8 @@ from gnn import GraphNet
 import warnings
 warnings.filterwarnings('ignore')
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print("Device: ", device)
 
 def evaluate(output, labels, mask):
     _, indices = torch.max(output, dim=1)
@@ -27,7 +29,7 @@ class GNNModelManager(object):
     def load_data(self, dataset='Citeseer'):
         
         path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'data', dataset)
-        dataset = Planetoid(path, dataset, T.NormalizeFeatures())
+        dataset = Planetoid(path, dataset)#, T.NormalizeFeatures())
         data = dataset[0]
         
 #         print(np.sum(np.array(data.val_mask), 0))
@@ -82,9 +84,7 @@ class GNNModelManager(object):
 
         # create model
         model = self.build_gnn(actions)
-
-        if self.args.cuda:
-            model.cuda()
+        model.to(device)
 
         # use optimizer
         optimizer = torch.optim.Adam(model.parameters(), lr=self.args.lr, weight_decay=self.args.weight_decay)
@@ -114,8 +114,8 @@ class GNNModelManager(object):
         drop_outs = params[:-2]
         
         gnn_model = self.build_gnn(actions, drop_outs)
-        if self.args.cuda:
-            gnn_model.cuda()        
+        gnn_model.to(device)
+        
         # define optimizer
         optimizer = torch.optim.Adam(gnn_model.parameters(),
                                      lr=learning_rate,
@@ -134,7 +134,6 @@ class GNNModelManager(object):
     @staticmethod
     def run_model(model, optimizer, loss_fn, data, epochs, early_stop=5, 
                   return_best=False, cuda=True, need_early_stop=False, show_info=False):
-#        device = torch.device('cuda' if self.args.cuda else 'cpu')
         dur = []
         begin_time = time.time()
         best_performance = 0
@@ -147,12 +146,10 @@ class GNNModelManager(object):
             
             model.train()
 #             print(data.edge_index.shape, data.x.shape, data.y.shape)
-            # forward
-            
-            logits = model(data.x.cuda(), data.edge_index.cuda())
+            logits = model(data.x.to(device), data.edge_index.to(device))
             logits = F.log_softmax(logits, 1)
             
-            loss = loss_fn(logits[data.train_mask], data.y[data.train_mask].cuda())
+            loss = loss_fn(logits[data.train_mask], data.y[data.train_mask].to(device))
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -160,14 +157,14 @@ class GNNModelManager(object):
 
             # evaluate
             model.eval()
-            logits = model(data.x.cuda(), data.edge_index.cuda())
+            logits = model(data.x.to(device), data.edge_index.to(device))
             logits = F.log_softmax(logits, 1)
             
-            train_acc = evaluate(logits.cuda(), data.y.cuda(), data.train_mask.cuda())
-            val_acc = evaluate(logits.cuda(), data.y.cuda(), data.val_mask.cuda())
-            test_acc = evaluate(logits.cuda(), data.y.cuda(), data.test_mask.cuda())
+            train_acc = evaluate(logits.to(device), data.y.to(device), data.train_mask.to(device))
+            val_acc = evaluate(logits.to(device), data.y.to(device), data.val_mask.to(device))
+            test_acc = evaluate(logits.to(device), data.y.to(device), data.test_mask.to(device))
 
-            loss = loss_fn(logits[data.val_mask].cuda(), data.y[data.val_mask].cuda())
+            loss = loss_fn(logits[data.val_mask].to(device), data.y[data.val_mask].to(device))
             val_loss = loss.item()
             if val_loss < min_val_loss:  # and train_loss < min_train_loss
                 min_val_loss = val_loss
@@ -207,8 +204,8 @@ class GNNModelManager(object):
         norm[torch.isinf(norm)] = 0
 
         if cuda:
-            features = features.cuda()
-            labels = labels.cuda()
-            norm = norm.cuda()
+            features = features.to(device)
+            labels = labels.to(device)
+            norm = norm.to(device)
         g.ndata['norm'] = norm.unsqueeze(1)
         return features, g, labels, mask, val_mask, test_mask, n_edges        

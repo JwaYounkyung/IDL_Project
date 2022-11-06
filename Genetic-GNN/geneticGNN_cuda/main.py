@@ -4,6 +4,8 @@ import torch
 import configs
 import tensor_utils as utils
 from population import Population
+import os
+#os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 def main(args):
     torch.manual_seed(args.random_seed) 
