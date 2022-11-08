@@ -10,7 +10,7 @@ from gnn import GraphNet
 import warnings
 warnings.filterwarnings('ignore')
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 print("Device: ", device)
 
 def evaluate(output, labels, mask):

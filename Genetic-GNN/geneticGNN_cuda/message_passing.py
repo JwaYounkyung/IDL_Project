@@ -13,7 +13,7 @@ __size_error_msg__ = ('All tensors which should get mapped to the same source '
 is_python2 = sys.version_info[0] < 3
 getargspec = inspect.getargspec if is_python2 else inspect.getfullargspec
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 print("Device: ", device)
 
 class MessagePassing(torch.nn.Module):
