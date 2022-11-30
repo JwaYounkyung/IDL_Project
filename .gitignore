@@ -1,4 +1,8 @@
 **/__pycache__/
 **/.vscode/
-Genetic-GNN/data/cora/cora
+**/data/cora/cora/
+**/data/PROTEINS/
 **/.ipynb_checkpoints/
+*.txt
+*.ipynb
+*.log
