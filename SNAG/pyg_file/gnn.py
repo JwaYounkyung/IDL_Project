@@ -23,6 +23,8 @@ class GraphNet(torch.nn.Module):
         self.jk_mode = 'none'
         self.hyperargs = hyperargs
 
+        self.device = torch.device("cuda" if self.args.cuda else "cpu")
+
         self.build_model(actions, drop_out, num_feat, num_label, state_num)
 
     def build_model(self, actions, drop_out, num_feat, num_label, state_num):
@@ -132,14 +134,14 @@ class GraphNet(torch.nn.Module):
                 jk_func = JumpingKnowledge(mode='max')
             if self.jk_mode == 'lstm':
                 jk_func = JumpingKnowledge(mode='lstm', channels=out_channels,
-                                                num_layers=sum(self.use_skip)).cuda()
+                                                num_layers=sum(self.use_skip)).to(self.device)
 
             if self.jk_mode in ['lstm','maxpool']:
-                final_lin = torch.nn.Linear(out_channels, out_channels).cuda()
+                final_lin = torch.nn.Linear(out_channels, out_channels).to(self.device)
             else:
-                final_lin = torch.nn.Linear(sum(self.use_skip) * out_channels, out_channels).cuda()
+                final_lin = torch.nn.Linear(sum(self.use_skip) * out_channels, out_channels).to(self.device)
 
-            classifier = torch.nn.Linear(out_channels, self.num_label).cuda()
+            classifier = torch.nn.Linear(out_channels, self.num_label).to(self.device)
 
 
         else:
@@ -167,13 +169,13 @@ class GraphNet(torch.nn.Module):
                     jk_func = JumpingKnowledge(mode='max')
                 if self.jk_mode == 'lstm':
                     jk_func = JumpingKnowledge(mode='lstm', channels=out_channels,
-                                                    num_layers=sum(self.use_skip)).cuda()
+                                                    num_layers=sum(self.use_skip)).to(self.device)
                 if self.jk_mode in ['lstm', 'maxpool']:
-                    final_lin = torch.nn.Linear(out_channels, out_channels).cuda()
+                    final_lin = torch.nn.Linear(out_channels, out_channels).to(self.device)
                 else:
-                    final_lin = torch.nn.Linear(sum(self.use_skip) * out_channels, out_channels).cuda()
+                    final_lin = torch.nn.Linear(sum(self.use_skip) * out_channels, out_channels).to(self.device)
 
-                classifier = torch.nn.Linear(out_channels, self.num_label).cuda()
+                classifier = torch.nn.Linear(out_channels, self.num_label).to(self.device)
 
 
                 if self.args.update_shared == True:
@@ -302,8 +304,8 @@ class GraphNet_GraphNAS(GraphNet):
             final_lin = self.args.shared_parms_dict['final_lin' + str(out_channels)]
             classifier = self.args.shared_parms_dict['classifier' + str(out_channels)]
         else:
-            final_lin = torch.nn.Linear(out_channels, out_channels).cuda()
-            classifier = torch.nn.Linear(out_channels, self.num_label).cuda()
+            final_lin = torch.nn.Linear(out_channels, out_channels).to(self.device)
+            classifier = torch.nn.Linear(out_channels, self.num_label).to(self.device)
             self.args.shared_parms_dict['final_lin' + str(out_channels)] = final_lin
             self.args.shared_parms_dict['classifier' + str(out_channels)] = classifier
 
