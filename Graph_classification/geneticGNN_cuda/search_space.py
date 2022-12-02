@@ -29,9 +29,11 @@ class HybridSearchSpace(object):
     def get_param_space(self):
         return self.param_space   
     
+    ###########################
     def get_action_type_list(self):
         action_names = list(self.net_space.keys())
-        return action_names * self.num_gnn_layers
+        # return action_names * self.num_gnn_layers
+        return action_names[:-1] * self.num_gnn_layers + [action_names[-1]]
     
     def get_net_instance(self):
         "sample network architects for multi-layer GNN"
