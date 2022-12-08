@@ -16,25 +16,26 @@ def register_default_args(parser):
     parser.add_argument('--random_seed', type=int, default=123)    
     parser.add_argument("--dataset", type=str, default="PROTEINS", required=False,
                         help="The input dataset.")
-    
+    parser.add_argument("--dataset_seed", type=int, default=1, required=False, help="The dataset k-fold")
+        
     # settings for the genetic algorithm
-    parser.add_argument('--num_individuals', type=int, default=20,
+    parser.add_argument('--num_individuals', type=int, default=10, # 20 -> population
                         help='the population size')
     parser.add_argument('--num_generations', type=int, default=50,
                         help='number of evolving generations')
-    parser.add_argument('--num_parents', type=int, default=10,
+    parser.add_argument('--num_parents', type=int, default=5, # 10 -> struct
                         help='number of parents for crossover')
-    parser.add_argument('--num_parents_param', type=int, default=4,
+    parser.add_argument('--num_parents_param', type=int, default=2, #4 -> param
                         help='number of parents for crossover')
-    parser.add_argument('--num_offsprings', type=int, default=4,
+    parser.add_argument('--num_offsprings', type=int, default=3, # 4 -> struct
                         help='number of offsprings')
-    parser.add_argument('--num_offsprings_param', type=int, default=2,
+    parser.add_argument('--num_offsprings_param', type=int, default=1, #2 -> param
                         help='number of offsprings')
     parser.add_argument('--mutate_prob', type=float, default=0.02,
                         help='mutation probability')
-    parser.add_argument('--num_individuals_param', type=int, default=4,
+    parser.add_argument('--num_individuals_param', type=int, default=2, # 4 -> param
                         help='the population size')   
-    parser.add_argument('--num_generations_param', type=int, default=5,
+    parser.add_argument('--num_generations_param', type=int, default=3, #5 -> param
                         help='number of evolving generations') 
     parser.add_argument('--super_ratio', type=float, default=0.6,
                         help=' probability')

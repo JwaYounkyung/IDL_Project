@@ -7,7 +7,7 @@ from torch_scatter import scatter_add
 
 from message_passing import MessagePassing
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 print("Device: ", device)
 
 class GeoLayer(MessagePassing):

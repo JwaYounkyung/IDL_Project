@@ -6,6 +6,7 @@ import numpy as np
 # from gnn_model_manager import GNNModelManager
 from gnn_model_manager_protein import GNNModelManager
 import copy
+import time
 
 class Population(object):
     
@@ -327,7 +328,7 @@ class Population(object):
         return best_individual
     
                     
-    def evolve_net(self):
+    def evolve_net(self, start_time):
         # initialize population
         self.init_population()
         # calculate fitness for population
@@ -374,5 +375,7 @@ class Population(object):
             print(actions)           
             print(params)           
             print(train_accs)           
-            print(test_accs)           
+            print(test_accs) 
+            end_time = time.time()
+            print("Execution Time for Generation {} = ".format(j), (end_time - start_time)/60, " minutes")          
         

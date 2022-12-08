@@ -11,7 +11,7 @@ from gnn import GraphClassfier
 import warnings
 warnings.filterwarnings('ignore')
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 print("Device: ", device)
 
 def evaluate(model, dataloader):
@@ -69,12 +69,23 @@ class GNNModelManager(object):
         
         
         # make dataloader
-        dataset = dataset.shuffle()
-        ix1 = int(len(dataset) * 0.6)
-        ix2 = int(len(dataset) * 0.8)
-        train_dataset = dataset[:ix1]
-        valid_dataset = dataset[ix1:ix2]
-        test_dataset = dataset[ix2:]
+        # dataset = dataset.shuffle()
+        # ix1 = int(len(dataset) * 0.6)
+        # ix2 = int(len(dataset) * 0.8)
+        with open('dataset/{}/10fold_idx/train_idx-{}.txt'.format(self.args.dataset, self.args.dataset_seed), 'r') as f:
+            train_ixs_all = [int(line.rstrip()) for line in f]
+        with open('dataset/{}/10fold_idx/test_idx-{}.txt'.format(self.args.dataset, self.args.dataset_seed), 'r') as f:
+            test_ixs = [int(line.rstrip()) for line in f]
+        train_val = int(len(train_ixs_all) * 0.8)
+        train_ixs = train_ixs_all[:train_val]
+        valid_ixs = train_ixs_all[train_val:]
+        # train_dataset = dataset[:ix1]
+        # valid_dataset = dataset[ix1:ix2]
+        # test_dataset = dataset[ix2:]
+        print("Train data = ", len(train_ixs), " Valid data = ", len(valid_ixs), " Test data = ", len(test_ixs))
+        train_dataset = dataset[train_ixs]
+        valid_dataset = dataset[valid_ixs]
+        test_dataset = dataset[test_ixs]
         
         self.trainloader = DataLoader(train_dataset, batch_size=64, shuffle=True)
         self.validloader = DataLoader(valid_dataset, batch_size=64, shuffle=True)

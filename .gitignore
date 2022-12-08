@@ -6,3 +6,5 @@
 *.txt
 *.ipynb
 *.log
+*.zip
+*.mat

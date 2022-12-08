@@ -8,6 +8,7 @@ import os
 #os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 def main(args):
+    start_time = time.time()
     torch.manual_seed(args.random_seed) 
     
     utils.makedirs(args.dataset)  
@@ -15,7 +16,7 @@ def main(args):
     print(args.super_ratio)
     
     pop = Population(args)
-    pop.evolve_net()
+    pop.evolve_net(start_time)
 
     # run on single model
     # num_epochs = 200
