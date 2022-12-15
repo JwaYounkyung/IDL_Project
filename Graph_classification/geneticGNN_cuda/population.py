@@ -3,10 +3,9 @@ from individual import Individual
 from super_individual import Super_Individual
 from random import sample, choices
 import numpy as np
-# from gnn_model_manager import GNNModelManager
-from gnn_model_manager_protein import GNNModelManager
+from gnn_model_manager import GNNModelManager
 import copy
-import time
+
 
 class Population(object):
     
@@ -30,6 +29,7 @@ class Population(object):
         
         struct_individuals = []
         
+
         for i in range(self.args.num_individuals):
             net_genes = self.hybrid_search_space.get_net_instance()
 #             param_genes = self.hybrid_search_space.get_param_instance()
@@ -84,9 +84,9 @@ class Population(object):
                     
     
     # run on the single model with more training epochs
-    def single_model_run(self, num_epochs, actions, params):
+    def single_model_run(self, num_epochs, actions):
         self.args.epochs = num_epochs
-        self.gnn_manager.train(actions, params)
+        self.gnn_manager.train(actions)
         
         
     def cal_fitness(self):
@@ -230,6 +230,16 @@ class Population(object):
                 index = elem_index
                 
         return index
+
+    def find_best_fittest(self, individuals):
+        fitness = -10000
+        index =-1
+        for elem_index, elem in enumerate(individuals):
+            if fitness < elem.get_fitness():
+                fitness = elem.get_fitness()
+                index = elem_index
+                
+        return index
                            
     def cal_fitness_offspring(self, offsprings):
         survivors = []
@@ -275,10 +285,46 @@ class Population(object):
             
     def update_population_struct(self, survivors):
         """update current population with new offsprings"""
+        ########elitism#########
+        # print("before elite: ")
+        # for k in self.struct_individuals:
+        #     print(k.net_genes, " ", k.param_genes, " ", k.fitness, " ", k.test_acc)
+
+        elite_idx = self.find_best_fittest(self.struct_individuals)
+        elite_elem = self.struct_individuals[elite_idx] #elite is correctly found
+        # print("elite index: ", elite_idx)
+        ########elitism#########
+
         for elem in survivors:
             if self.update_struct(elem):
                 out_index = self.find_least_fittest(self.struct_individuals)
                 self.struct_individuals[out_index] = elem
+                #print("out index: ", out_index)
+
+        ########elitism#########
+        # print("before elite 2: ")
+        # for k in self.struct_individuals:
+        #     print(k.net_genes, " ", k.param_genes, " ", k.fitness, " ", k.test_acc)
+
+
+        if elite_elem.param_genes != self.struct_individuals[elite_idx].param_genes or elite_elem.net_genes != self.struct_individuals[elite_idx].net_genes:
+            last_worst_idx = self.find_least_fittest(self.struct_individuals)
+            self.struct_individuals[last_worst_idx] = elite_elem
+            # print("worst_idx: ", last_worst_idx)
+
+        # print("after elite : ")
+        # for k in self.struct_individuals:
+        #     print(k.net_genes, " ", k.param_genes, " ", k.fitness, " ", k.test_acc)
+        # best_idx = self.find_best_fittest(self.struct_individuals)
+        # if best_idx != elite_idx:
+        #   last_worst_idx = self.find_least_fittest(self.struct_individuals)
+        #   self.struct_individuals[last_worst_idx] = elite_elem
+        # else:
+        #   best_elem = self.super_population[best_idx]
+        #   if best_elem.get_fitness() <= elite_elem.get_fitness():
+        #     last_worst_idx = self.find_least_fittest(self.super_population)
+        #     self.super_population[last_worst_idx] = elite_elem
+        ########elitism#########
 
     def compare_action(self, a1, a2):
         for i in range(len(a1)):
@@ -293,13 +339,30 @@ class Population(object):
             
     def update_population_param(self, survivors):
         """update current population with new offsprings"""
+        ########elitism#########
+        elite_idx = self.find_best_fittest(self.super_population)
+        elite_elem = self.super_population[elite_idx]
+        ########elitism#########
+
+        
         for elem in survivors:
             out_index = self.find_least_fittest(self.super_population)
             self.super_population[out_index] = elem
+
+
+        ########elitism######### 
+        if elite_elem.param_genes != self.super_population[elite_idx].param_genes:
+            last_worst_idx = self.find_least_fittest(self.super_population)
+            self.super_population[last_worst_idx] = elite_elem
+        
+        ########elitism#########
+
+
         params_individuals = []
         for super_elem in self.super_population:
             params_individuals.append(super_elem.get_param_genes())
         self.params_individuals = params_individuals
+
 
     
     def print_models(self, iter):
@@ -326,13 +389,37 @@ class Population(object):
         print('====end====\n')
         
         return best_individual
+
+    
     
                     
-    def evolve_net(self, start_time):
+    def evolve_net(self):
+      ######
+
+        # self.args.num_individuals = 8
+        # self.args.num_offsprings = self.args.num_individuals
+        # self.args.num_offsprings_param = self.args.num_individuals_param
+        #self.args.num_generations = 50
+        # self.args.num_generations_param = 2
+      ######
+        print("num_individuals: ", self.args.num_individuals)
+        print("num_individuals_param: ", self.args.num_individuals_param)
+        print("num_offsprings: ", self.args.num_offsprings)
+        print("num_offsprings_params: ",self.args.num_offsprings_param)
+        print("num_generations: ", self.args.num_generations)
+        print("num_generations_params: ", self.args.num_generations_param)
+        print("mutation_rate: ", self.args.mutate_prob)
+        
         # initialize population
         self.init_population()
         # calculate fitness for population
         self.cal_fitness()
+
+        #initialize mutation rates population
+        # mut_pop_param = self.get_size_mutation_pop(self.args.num_offsprings_param)
+        # mut_pop_net = self.get_size_mutation_pop(self.args.num_offsprings)
+        # self.init_mutation_pop(mut_pop_param, mut_pop_net)
+        
         
         actions = []
         params = []
@@ -344,6 +431,14 @@ class Population(object):
             print('===================GNN hyper parameter evolution====================')
             initl_param_individual = copy.deepcopy(self.struct_individuals)
             self.init_param_population(initl_param_individual)
+            #print("end1")
+
+            # print("###super population###")
+            # for k in self.super_population:
+            #     print(k.param_genes, " ", k.fitness)
+            #     for m in k.population:
+            #         print(m.net_genes, " ", m.fitness)
+            # print("###super population###")
 
             for i in range(self.args.num_generations_param):
                 param_parents = self.parent_selection_param()            
@@ -351,11 +446,20 @@ class Population(object):
                 self.mutation_param(param_offsprings)
                 param_survivors = self.cal_fitness_offspring_param(param_offsprings)
                 self.update_population_param(param_survivors) # update the population      
+                #print("end2")
+
             
             # update the structure population with the best hyper-parameter
             print('##################update structure population##################')
-            out_index = self.find_least_fittest(self.super_population)
-            self.struct_individuals = self.super_population[out_index].get_population()
+            out_index = self.find_best_fittest(self.super_population)
+            self.struct_individuals = self.super_population[out_index].get_population()   ###least fittest로 struct_individual을 한다??
+
+            # print("###super population after evolution###")
+            # for k in self.super_population:
+            #     print(k.param_genes, " ", k.fitness)
+            #     for m in k.population:
+            #         print(m.net_genes, " ", m.fitness)
+            # print("###super population###")
             
             # GNN structure evolution
             print('--------------------GNN structure evolution-------------------------')
@@ -365,6 +469,12 @@ class Population(object):
             struct_survivors = self.cal_fitness_offspring(struct_offsprings) # calculate fitness for offsprings
             self.update_population_struct(struct_survivors) # update the population 
             
+            # print("#####all population#####")
+            # for k in self.struct_individuals:
+            #     print(k.net_genes, " ", k.param_genes, " ", k.fitness, " ", k.test_acc)
+
+            # print("#####all population#####")
+
             
             best_individual = self.print_models(j)
             actions.append(best_individual.get_net_genes())
@@ -375,7 +485,5 @@ class Population(object):
             print(actions)           
             print(params)           
             print(train_accs)           
-            print(test_accs) 
-            end_time = time.time()
-            print("Execution Time for Generation {} = ".format(j), (end_time - start_time)/60, " minutes")          
+            print(test_accs)           
         
