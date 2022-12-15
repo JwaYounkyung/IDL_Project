@@ -8,17 +8,22 @@ class HybridSearchSpace(object):
         
         self.net_space = {
             'attention_type':['gat', 'gcn', 'cos', 'const', 'gat_sym', 'linear', 'generalized_linear'],
-#             'aggregator_type':['sum', 'mean', 'max', 'mlp', 'lstm'],
+            # 'attention_type':['gcn', 'cos', 'gat_sym', 'generalized_linear'],
             'aggregator_type':['sum', 'mean', 'max', 'mlp'],
+            # 'aggregator_type':['max', 'mlp'],
             'activation_function':['sigmoid', 'tanh', 'relu', 'linear',
                                    'softplus', 'leaky_relu', 'relu6', 'elu'],
+            # 'activation_function':['tanh', 'softplus', 'relu', 'relu6', 'elu',
+            #                        'gelu', 'selu', 'normalize'],
             'number_of_heads':[1, 2, 4, 6, 8, 16],
             'hidden_units':[4, 8, 16, 32, 64, 128, 256]
             }
             
         self.param_space = {
             'drop_out':[0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
+            # 'drop_out':[0.05, 0.1, 0.2, 0.4, 0.8],
             'learning_rate':[5e-4, 1e-3, 5e-3, 1e-2],
+            # 'learning_rate':[5e-4, 1e-3, 2e-3, 3e-3],
             'weight_decay':[5e-4, 8e-4, 1e-3, 4e-3]
             }
     
@@ -99,6 +104,12 @@ def act_map(act):
         return torch.nn.functional.softplus
     elif act == "leaky_relu":
         return torch.nn.functional.leaky_relu
+    # elif act == "gelu":
+    #     return torch.nn.functional.gelu
+    # elif act == "selu":
+    #     return torch.nn.functional.selu
+    # elif act == "normalize":
+    #     return torch.nn.functional.normalize
     else:
         raise Exception("wrong activate function")
         
